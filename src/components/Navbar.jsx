@@ -1,18 +1,27 @@
 import { Link } from "react-router-dom";
+import Logo from "../assets/logo_01.jpg";
 
 const Navbar = () => {
   return (
-    <div className="navbar bg-base-200 px-4 shadow-md">
+    <div className="navbar bg-white px-4 shadow-md">
       {/* Left: Logo */}
       <div className="navbar-start">
-        <Link to="/" className="text-2xl font-bold text-primary">
-          ScholarStream
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-2xl font-bold tracking-wide"
+        >
+          <img
+            src={Logo}
+            alt="ScholarStream Logo"
+            className="w-10 h-10 rounded-md object-contain"
+          />
+          <span className="text-warning">ScholarStream</span>
         </Link>
       </div>
 
       {/* Center: Main Navigation (visible on large screens) */}
       <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1">
+        <ul className="menu menu-horizontal px-1 text-gray-700 font-medium">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/scholarships">All Scholarships</Link></li>
         </ul>
@@ -33,7 +42,7 @@ const Navbar = () => {
               d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </label>
-        <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+        <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-52 text-gray-700">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/scholarships">All Scholarships</Link></li>
           <li><Link to="/login">Login</Link></li>
