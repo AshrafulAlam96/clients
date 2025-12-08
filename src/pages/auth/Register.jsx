@@ -1,0 +1,61 @@
+import React from "react";
+import { useForm } from "react-hook-form";
+
+const Register = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const onSubmit = (data) => {
+    console.log("Register Data:", data);
+  };
+
+  return (
+      <div className="bg-lime-100 rounded-xl shadow-lg w-full max-w-md p-6">
+        <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Register</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Name */}
+          <label className="text-sm text-gray-700">Name</label>
+          <input
+            type="text"
+            placeholder="Name"
+            {...register("name", { required: "Name is required" })}
+            className="input input-bordered w-full bg-gray-100"
+          />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+
+          {/* Email */}
+          <label className="text-sm text-gray-700">Email</label>
+          <input
+            type="email"
+            placeholder="Email"
+            {...register("email", { required: "Email is required" })}
+            className="input input-bordered w-full bg-gray-100"
+          />
+          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+
+          {/* Password */}
+          <label className="text-sm text-gray-700">Password</label>
+          <input
+            type="password"
+            placeholder="Password"
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 6, message: "Minimum 6 characters" },
+            })}
+            className="input input-bordered w-full bg-gray-100"
+          />
+          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+
+          {/* Submit */}
+          <button type="submit" className="btn w-full bg-amber-700 text-white hover:bg-amber-800">
+            Register
+          </button>
+        </form>
+      </div>
+  );
+};
+
+export default Register;
