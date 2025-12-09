@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import AuthLayout from "../layouts/AuthLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import AllScholarships from "../pages/AllScholarships";
 
 export const router = createBrowserRouter([
   {
@@ -13,7 +14,7 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { path: "/", element: <Home /> },
-      { path: "/scholarships", element: <div>All Scholarships Placeholder</div> },
+      { path: "/scholarships", element: <AllScholarships /> },
     ],
   },
   {

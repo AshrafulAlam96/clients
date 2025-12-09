@@ -1,0 +1,36 @@
+export const scholarshipsData = [
+  {
+    _id: 1,
+    name: "Global Excellence Scholarship",
+    university: "Harvard University",
+    category: "Merit-Based",
+    country: "USA",
+    degree: "Masters",
+    postedDate: "2024-01-10",
+    fees: 50,
+    image: "https://i.ibb.co/5c5KMVt/harvard.jpg",
+  },
+  {
+    _id: 2,
+    name: "ASEAN Leadership Scholarship",
+    university: "National University of Singapore",
+    category: "Government",
+    country: "Singapore",
+    degree: "Bachelor",
+    postedDate: "2024-02-14",
+    fees: 20,
+    image: "https://i.ibb.co/HdXsbLk/nus.jpg",
+  },
+  {
+    _id: 3,
+    name: "Commonwealth Fully-Funded Scholarship",
+    university: "University of Cambridge",
+    category: "Merit-Based",
+    country: "UK",
+    degree: "PhD",
+    postedDate: "2024-02-20",
+    fees: 0,
+    image: "https://i.ibb.co/sbJGpB0/cambridge.jpg",
+  },
+  // Add more items (total at least 12 for pagination testing)
+];

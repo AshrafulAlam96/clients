@@ -8,7 +8,7 @@ const Home = () => {
     <div className="space-y-20">
 
       {/* HERO SECTION */}
-      <section className="text-center py-20 bg-base-200 rounded-xl">
+      <section className="rounded-xl overflow-hidden">
         <Banner></Banner>
       </section>
 
