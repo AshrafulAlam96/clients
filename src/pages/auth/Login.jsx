@@ -1,26 +1,36 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";   // ✅ import Link
 import useAuth from "../../../hooks/useAuth";
+import SocialLogin from "./SocialLogin";
 
 const Login = () => {
-  const { register, handleSubmit, formState: { errors },} = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const { signInUser } = useAuth();
+  const { signInUser } = useAuth(); // ✅ add googleLogin from your hook
 
   const onSubmit = (data) => {
     console.log("Login Data:", data);
     signInUser(data.email, data.password)
-      .then(result => {
+      .then((result) => {
         console.log(result.user);
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error);
-    })
+      });
   };
 
+
   return (
-      <div className="bg-lime-100 rounded-xl shadow-lg w-full max-w-md p-6">
+    <div className="min-h-screen bg-emerald-100 flex items-center justify-center px-4">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
         <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Login</h2>
+
+        {/* Email/Password Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
           <label className="text-sm text-gray-700">Email</label>
@@ -43,11 +53,30 @@ const Login = () => {
           {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
 
           {/* Submit */}
-          <button type="submit" className="btn w-full bg-amber-700 text-white hover:bg-amber-800">
+          <button
+            type="submit"
+            className="btn w-full bg-amber-700 text-white hover:bg-amber-800"
+          >
             Login
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="divider">OR</div>
+
+        {/* Google Login */}
+        <SocialLogin></SocialLogin>
+        
+
+        {/* Register Link */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          New Here?{" "}
+          <Link to="/auth/register" className="text-amber-700 font-semibold hover:underline">
+            Register
+          </Link>
+        </p>
       </div>
+    </div>
   );
 };
 

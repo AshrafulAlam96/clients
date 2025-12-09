@@ -1,26 +1,23 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import useAuth from "../../../hooks/useAuth";
+import SocialLogin from "./SocialLogin";
 
 const Register = () => {
-  const { register, handleSubmit, formState: { errors }, } = useForm();
-  
-  const {registerUser} = useAuth();
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { registerUser} = useAuth();
 
   const onSubmit = (data) => {
-    console.log("Register Data:", data);
     registerUser(data.email, data.password)
-      .then(result => {
-        console.log(result.user);
-      })
-      .catch(error => {
-        console.log(error);
-    })
+      .then(result => console.log(result.user))
+      .catch(error => console.log(error));
   };
 
   return (
-      <div className="bg-lime-100 rounded-xl shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Register</h2>
+    <div className="min-h-screen bg-emerald-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-center mb-6 text-gray-800">Register</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Name */}
           <label className="text-sm text-gray-700">Name</label>
@@ -60,7 +57,22 @@ const Register = () => {
             Register
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="divider">OR</div>
+
+        {/* Google Signup */}
+        <SocialLogin></SocialLogin>
+
+        {/* Login Link */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/auth/login" className="text-amber-700 font-semibold hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
+    </div>
   );
 };
 
