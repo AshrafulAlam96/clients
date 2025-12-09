@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Logo from "../assets/logo_01.jpg";
-import useAuth from "../../hooks/useAuth";
+import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
   const { user, logOut } = useAuth(); // ✅ add logOut from context

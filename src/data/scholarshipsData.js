@@ -8,6 +8,10 @@ export const scholarshipsData = [
     degree: "Masters",
     postedDate: "2024-01-10",
     fees: 50,
+    deadline: "2024-04-10",
+    stipend: 2000,
+    description:
+      "A prestigious scholarship awarded to outstanding students with exceptional academic performance.",
     image: "https://i.ibb.co/5c5KMVt/harvard.jpg",
   },
   {
@@ -19,18 +23,25 @@ export const scholarshipsData = [
     degree: "Bachelor",
     postedDate: "2024-02-14",
     fees: 20,
+    deadline: "2024-05-01",
+    stipend: 1500,
+    description:
+      "Designed for emerging leaders across ASEAN countries with strong potential.",
     image: "https://i.ibb.co/HdXsbLk/nus.jpg",
   },
   {
     _id: 3,
-    name: "Commonwealth Fully-Funded Scholarship",
+    name: "Commonwealth Scholarship",
     university: "University of Cambridge",
     category: "Merit-Based",
     country: "UK",
     degree: "PhD",
     postedDate: "2024-02-20",
     fees: 0,
+    deadline: "2024-03-20",
+    stipend: 2500,
+    description:
+      "A full-ride scholarship for exceptional candidates from Commonwealth nations.",
     image: "https://i.ibb.co/sbJGpB0/cambridge.jpg",
   },
-  // Add more items (total at least 12 for pagination testing)
 ];
