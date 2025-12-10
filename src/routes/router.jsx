@@ -16,9 +16,9 @@ import AllScholarships from "../pages/AllScholarships";
 import ScholarshipDetails from "../pages/ScholarshipDetails";
 
 //? Student
-// import StudentDashboardHome from "../pages/students/StudentDashboardHome";
-// import MyApplications from "../pages/students/MyApplications";
-// import MyReviews from "../pages/students/MyReviews";
+import StudentDashboardHome from "../pages/students/StudentDashboardHome";
+import MyApplications from "../pages/students/MyApplications";
+import MyReviews from "../pages/students/MyReviews";
 // import MyProfile from "../pages/students/MyProfile";
 
 //? Admin
@@ -54,6 +54,16 @@ export const router = createBrowserRouter([
     children: [
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+    ],
+  },
+  {
+  path: "/dashboard/student",
+  element: <StudentDashboardLayout />,
+  children: [
+      { path: "", element: <StudentDashboardHome /> },
+      { path: "applications", element: <MyApplications /> },
+      { path: "reviews", element: <MyReviews /> },
+      // { path: "profile", element: <MyProfile /> },
     ],
   },
   {
