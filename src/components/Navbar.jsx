@@ -43,12 +43,11 @@ const Navbar = () => {
             <span className="text-gray-700 font-medium">
               {user.displayName || user.email}
             </span>
-            <button
-              onClick={handleLogout}
-              className="btn btn-outline btn-sm"
-            >
+            <button onClick={handleLogout} className="btn btn-outline btn-sm">
               Logout
             </button>
+            <Link to="/dashboard/student" className="btn btn-outline btn-sm">Dashboard
+</Link>
           </>
         ) : (
           <>
