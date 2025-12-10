@@ -1,17 +1,35 @@
 import { useParams, Link } from "react-router-dom";
 import { scholarshipsData } from "../data/scholarshipsData";
 import { motion } from "framer-motion";
-// import { useAuth } from "../hooks/useAuth"; // if you have this, else remove
 import { useEffect, useState } from "react";
+
+// Try to load useAuth safely (prevents crash if hook not found)
+let useAuthSafe = null;
+try {
+  useAuthSafe = require("../hooks/useAuth").useAuth;
+} catch {
+  useAuthSafe = null;
+}
 
 const ScholarshipDetails = () => {
   const { id } = useParams();
-//   const { user } = useAuth() || {}; // Safe access
   const [data, setData] = useState(null);
 
+  // SAFELY get user (prevents ReferenceError)
+  let user = null;
+  try {
+    if (useAuthSafe) {
+      const auth = useAuthSafe();
+      user = auth?.user || null;
+    }
+  } catch {
+    user = null;
+  }
+
+  // Load scholarship details
   useEffect(() => {
-    const found = scholarshipsData.find((item) => item._id == id);
-    setData(found);
+    const found = scholarshipsData.find((item) => String(item._id) === String(id));
+    setData(found || null);
   }, [id]);
 
   if (!data) {
@@ -66,7 +84,7 @@ const ScholarshipDetails = () => {
       <section>
         <h2 className="text-3xl font-semibold mb-6">Reviews</h2>
 
-        {/* STATIC DUMMY REVIEWS (Backend later) */}
+        {/* Static placeholder reviews */}
         <div className="space-y-4">
           <div className="border p-4 rounded-xl bg-white shadow">
             <p className="font-semibold">Sarah — ⭐⭐⭐⭐⭐</p>
@@ -79,27 +97,30 @@ const ScholarshipDetails = () => {
           </div>
         </div>
 
-        {/* IF USER IS LOGGED IN */}
-        {user ? (
-          <button className="btn btn-primary mt-6">
-            Add Review
-          </button>
-        ) : (
-          <p className="mt-6">
-            <Link to="/auth/login" className="text-blue-500">
-              Login to write a review
-            </Link>
-          </p>
-        )}
+        {/* Add Review Button */}
+        <div className="mt-6">
+          {user ? (
+            <button className="btn btn-primary">Add Review</button>
+          ) : (
+            <p>
+              <Link to="/auth/login" className="text-blue-500">
+                Login to write a review
+              </Link>
+            </p>
+          )}
+        </div>
       </section>
 
       {/* RELATED SCHOLARSHIPS */}
-      <section className="mt-10">
+      <section>
         <h2 className="text-2xl font-semibold mb-4">Related Scholarships</h2>
 
         <div className="grid md:grid-cols-3 gap-6">
           {scholarshipsData
-            .filter((s) => s.category === data.category && s._id !== data._id)
+            .filter(
+              (s) =>
+                s.category === data.category && String(s._id) !== String(data._id)
+            )
             .slice(0, 3)
             .map((r) => (
               <Link
