@@ -29,6 +29,13 @@ import AddScholarship from "../pages/admins/AddScholarship";
 import ManageUsers from "../pages/admins/ManageUsers";
 import ManageReviews from "../pages/admins/ManageReviews";
 
+//? Moderator
+import ModeratorDashboardLayout from "../layouts/ModeratorDashboardLayout";
+import ModeratorDashboardHome from "../pages/mods/ModeratorDashboardHome";
+import ScholarshipApproval from "../pages/mods/ScholarshipApproval";
+import ApplicationApproval from "../pages/mods/ApplicationApproval";
+import ReviewModeration from "../pages/mods/ReviewModeration";
+
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +54,16 @@ export const router = createBrowserRouter([
     children: [
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+    ],
+  },
+  {
+  path: "/dashboard/mod",
+  element: <ModeratorDashboardLayout />,
+  children: [
+      { path: "", element: <ModeratorDashboardHome /> },
+      { path: "scholarship-approval", element: <ScholarshipApproval /> },
+      { path: "application-approval", element: <ApplicationApproval /> },
+      { path: "review-moderation", element: <ReviewModeration /> },
     ],
   },
   {
