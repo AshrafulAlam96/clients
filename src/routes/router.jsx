@@ -21,6 +21,14 @@ import ScholarshipDetails from "../pages/ScholarshipDetails";
 // import MyReviews from "../pages/students/MyReviews";
 // import MyProfile from "../pages/students/MyProfile";
 
+//? Admin
+import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
+import AdminDashboardHome from "../pages/admins/AdminDashboardHome";
+import ManageScholarships from "../pages/admins/ManageScholarships";
+import AddScholarship from "../pages/admins/AddScholarship";
+import ManageUsers from "../pages/admins/ManageUsers";
+import ManageReviews from "../pages/admins/ManageReviews";
+
 
 export const router = createBrowserRouter([
   {
@@ -30,9 +38,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/",                  element: <Home /> },
       { path: "/scholarships",      element: <AllScholarships /> },
-      { path: "/scholarships/:id",  element: <ScholarshipDetails />,
-},
-
+      { path: "/scholarships/:id",  element: <ScholarshipDetails />,},
     ],
   },
   {
@@ -43,4 +49,15 @@ export const router = createBrowserRouter([
       { path: "register", element: <Register /> },
     ],
   },
+  {
+  path: "/dashboard/admin",
+  element: <AdminDashboardLayout />,
+  children: [
+    { path: "", element: <AdminDashboardHome /> },
+    { path: "scholarships", element: <ManageScholarships /> },
+    { path: "add-scholarship", element: <AddScholarship /> },
+    { path: "users", element: <ManageUsers /> },
+    { path: "reviews", element: <ManageReviews /> },
+  ],
+},
 ]);
