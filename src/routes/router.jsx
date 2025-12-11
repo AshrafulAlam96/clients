@@ -19,6 +19,7 @@ import ScholarshipDetails from "../pages/ScholarshipDetails";
 import StudentDashboardHome from "../pages/students/StudentDashboardHome";
 import MyApplications from "../pages/students/MyApplications";
 import MyReviews from "../pages/students/MyReviews";
+import MyBookmarks from "../pages/students/MyBookmarks";
 // import MyProfile from "../pages/students/MyProfile";
 
 //? Admin
@@ -63,7 +64,7 @@ export const router = createBrowserRouter([
       { path: "", element: <StudentDashboardHome /> },
       { path: "applications", element: <MyApplications /> },
       { path: "reviews", element: <MyReviews /> },
-      { path: "/dashboard/student/bookmarks", element: <MyBookmarks /> }
+      { path: "bookmarks", element: <MyBookmarks /> }
       // { path: "profile", element: <MyProfile /> },
     ],
   },

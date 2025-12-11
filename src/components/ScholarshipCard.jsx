@@ -1,22 +1,51 @@
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+// import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../hooks/useAuth";
 
-const { user } = useAuth() || {};
-const token = localStorage.getItem("token");
-
-const [bookmarked, setBookmarked] = useState(false);
-
-// optional: check if bookmarked on mount (frontend-only dummy check if needed)
-useEffect(() => {
-  // if you want to check by calling /bookmarks/my and matching scholarshipId
-}, []);
-
-
-
 const ScholarshipCard = ({ item }) => {
-  
+  const navigate = useNavigate();
+  const { user } = useAuth() || {};
+  const token = localStorage.getItem("token");
+
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Optional: check if already bookmarked
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      if (!user) return;
+      try {
+        const res = await axios.get("/bookmarks/my", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const already = res.data.find((b) => b.scholarshipId === item._id);
+        if (already) setBookmarked(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchBookmarks();
+  }, [user, item._id, token]);
+
+  // Add bookmark handler
+  const handleBookmark = async () => {
+    if (!user) return navigate("/login");
+
+    try {
+      const res = await axios.post(
+        "/bookmarks",
+        { scholarshipId: item._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.added) setBookmarked(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -25,7 +54,11 @@ const ScholarshipCard = ({ item }) => {
       className="card bg-white shadow-md hover:shadow-xl border border-base-200"
     >
       <figure>
-        <img src={item.image} alt={item.name} className="h-44 w-full object-cover" />
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-44 w-full object-cover"
+        />
       </figure>
 
       <div className="card-body">
@@ -35,24 +68,21 @@ const ScholarshipCard = ({ item }) => {
         <p className="font-semibold">Fees: ${item.fees}</p>
 
         <div className="card-actions justify-end">
-          <Link to={`/scholarships/${item._id}`} className="btn btn-primary btn-sm">
+          <Link
+            to={`/scholarships/${item._id}`}
+            className="btn btn-primary btn-sm"
+          >
             Details
           </Link>
-          <button
-            onClick={async () => {
-              if (!user) { return navigate("/auth/login"); }
-              try {
-                    const res = await axios.post("/bookmarks", { scholarshipId: item._id }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                        });
-                if (res.data.added) setBookmarked(true);
-      // show toast
-                } catch (err) { console.error(err); }
-               }}
-          className={`btn btn-sm ${bookmarked ? "btn-success" : "btn-ghost"}`}>
-  {bookmarked ? "Bookmarked" : "Bookmark"}
-  </button>
 
+          <button
+            onClick={handleBookmark}
+            className={`btn btn-sm ${
+              bookmarked ? "btn-success" : "btn-ghost"
+            }`}
+          >
+            {bookmarked ? "Bookmarked" : "Bookmark"}
+          </button>
         </div>
       </div>
     </motion.div>
