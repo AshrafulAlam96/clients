@@ -1,11 +1,19 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-// import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import useAuth from "../hooks/useAuth";   // ✔ correct import
-
-// If still using local JSON temporarily
+import useAuth from "../hooks/useAuth";
 import { scholarshipsData } from "../data/scholarshipsData";
+
+// Review API helpers
+import {
+  getReviews,
+  getAverageRating,
+  addOrUpdateReview,
+  deleteReview,
+} from "../api/reviews";
+
+import AddReviewModal from "../components/AddReviewModal";
 
 const ScholarshipDetails = () => {
   const { id } = useParams();
@@ -15,13 +23,29 @@ const ScholarshipDetails = () => {
   const token = localStorage.getItem("token");
 
   const [data, setData] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
-  // Load scholarship details
+  // Load scholarship details (temporary from local JSON)
   useEffect(() => {
     const found = scholarshipsData.find(
       (item) => String(item._id) === String(id)
     );
     setData(found || null);
+  }, [id]);
+
+  // Fetch reviews
+  const fetchReviews = async () => {
+    const data = await getReviews(id);
+    setReviews(data);
+
+    const avg = await getAverageRating(id);
+    setAvgRating(avg);
+  };
+
+  useEffect(() => {
+    fetchReviews();
   }, [id]);
 
   if (!data) {
@@ -32,7 +56,7 @@ const ScholarshipDetails = () => {
     );
   }
 
-  // Free apply handler (you may replace with backend API)
+  // Free apply handler
   const handleFreeApply = async () => {
     if (!user) return navigate("/auth/login");
 
@@ -46,6 +70,29 @@ const ScholarshipDetails = () => {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // Submit review
+  const handleSubmitReview = async ({ rating, comment }) => {
+    if (!user) return navigate("/auth/login");
+
+    await addOrUpdateReview(
+      {
+        scholarshipId: id,
+        rating,
+        comment,
+      },
+      token
+    );
+
+    setShowModal(false);
+    fetchReviews();
+  };
+
+  // Delete review
+  const handleDeleteReview = async (reviewId) => {
+    await deleteReview(reviewId, token);
+    fetchReviews();
   };
 
   return (
@@ -87,7 +134,6 @@ const ScholarshipDetails = () => {
                   return navigate(`/payment/checkout?id=${data._id}`);
                 }
 
-                // Free scholarship
                 handleFreeApply();
               }}
               className="btn btn-primary"
@@ -100,25 +146,46 @@ const ScholarshipDetails = () => {
 
       {/* REVIEW SECTION */}
       <section>
-        <h2 className="text-3xl font-semibold mb-6">Reviews</h2>
+        <h2 className="text-3xl font-semibold mb-2">
+          Reviews ({reviews.length}) — ⭐ {avgRating}
+        </h2>
 
-        {/* Replace placeholder with backend reviews later */}
+        {/* Reviews list */}
+        {reviews.length === 0 && (
+          <p className="text-gray-500">No reviews yet.</p>
+        )}
+
         <div className="space-y-4">
-          <div className="border p-4 rounded-xl bg-white shadow">
-            <p className="font-semibold">Sarah — ⭐⭐⭐⭐⭐</p>
-            <p>Great scholarship program and very helpful staff!</p>
-          </div>
+          {reviews.map((rev) => (
+            <div key={rev._id} className="border p-4 rounded-xl bg-white shadow">
+              <p className="font-semibold">
+                {rev.email} — {"⭐".repeat(rev.rating)}
+              </p>
 
-          <div className="border p-4 rounded-xl bg-white shadow">
-            <p className="font-semibold">John — ⭐⭐⭐⭐☆</p>
-            <p>Well structured application process.</p>
-          </div>
+              <p>{rev.comment}</p>
+
+              {/* Delete own review */}
+              {user?.email === rev.email && (
+                <button
+                  onClick={() => handleDeleteReview(rev._id)}
+                  className="btn btn-xs btn-error mt-2"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Add Review Button */}
+        {/* Add / update review */}
         <div className="mt-6">
           {user ? (
-            <button className="btn btn-primary">Add Review</button>
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowModal(true)}
+            >
+              Add / Update Review
+            </button>
           ) : (
             <p>
               <Link to="/auth/login" className="text-blue-500">
@@ -127,6 +194,13 @@ const ScholarshipDetails = () => {
             </p>
           )}
         </div>
+
+        {showModal && (
+          <AddReviewModal
+            onSubmit={handleSubmitReview}
+            onClose={() => setShowModal(false)}
+          />
+        )}
       </section>
 
       {/* RELATED SCHOLARSHIPS */}
