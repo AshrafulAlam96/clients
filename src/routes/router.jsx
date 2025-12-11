@@ -29,6 +29,7 @@ import ManageScholarships from "../pages/admins/ManageScholarships";
 import AddScholarship from "../pages/admins/AddScholarship";
 import ManageUsers from "../pages/admins/ManageUsers";
 import ManageReviews from "../pages/admins/ManageReviews";
+import AdminStatistics from "../pages/admins/AdminStatistics";
 
 //? Moderator
 import ModeratorDashboardLayout from "../layouts/ModeratorDashboardLayout";
@@ -37,6 +38,10 @@ import ScholarshipApproval from "../pages/mods/ScholarshipApproval";
 import ApplicationApproval from "../pages/mods/ApplicationApproval";
 import ReviewModeration from "../pages/mods/ReviewModeration";
 
+//? Payment
+import PaymentSuccess from "../pages/payment/PaymentSuccess";
+import PaymentFailed from "../pages/payment/PaymentFailed";
+import Checkout from "../pages/payment/Checkout";
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +92,15 @@ export const router = createBrowserRouter([
     { path: "add-scholarship", element: <AddScholarship /> },
     { path: "users", element: <ManageUsers /> },
     { path: "reviews", element: <ManageReviews /> },
+    { path: "stats", element: <AdminStatistics /> },
+  ],
+  },
+  {
+  path: "/payment",
+  children: [
+    { path: "checkout", element: <Checkout /> },
+    { path: "success", element: <PaymentSuccess /> },
+    { path: "failed", element: <PaymentFailed /> },
   ],
 },
 ]);

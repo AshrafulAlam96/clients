@@ -1,34 +1,26 @@
-import { useParams, Link } from "react-router-dom";
-import { scholarshipsData } from "../data/scholarshipsData";
-import { motion } from "framer-motion";
+import { useParams, Link, useNavigate } from "react-router-dom";
+// import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import axios from "axios";
+import useAuth from "../hooks/useAuth";   // ✔ correct import
 
-// Try to load useAuth safely (prevents crash if hook not found)
-let useAuthSafe = null;
-try {
-  useAuthSafe = require("../hooks/useAuth").useAuth;
-} catch {
-  useAuthSafe = null;
-}
+// If still using local JSON temporarily
+import { scholarshipsData } from "../data/scholarshipsData";
 
 const ScholarshipDetails = () => {
   const { id } = useParams();
-  const [data, setData] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth() || {};
 
-  // SAFELY get user (prevents ReferenceError)
-  let user = null;
-  try {
-    if (useAuthSafe) {
-      const auth = useAuthSafe();
-      user = auth?.user || null;
-    }
-  } catch {
-    user = null;
-  }
+  const token = localStorage.getItem("token");
+
+  const [data, setData] = useState(null);
 
   // Load scholarship details
   useEffect(() => {
-    const found = scholarshipsData.find((item) => String(item._id) === String(id));
+    const found = scholarshipsData.find(
+      (item) => String(item._id) === String(id)
+    );
     setData(found || null);
   }, [id]);
 
@@ -40,6 +32,22 @@ const ScholarshipDetails = () => {
     );
   }
 
+  // Free apply handler (you may replace with backend API)
+  const handleFreeApply = async () => {
+    if (!user) return navigate("/auth/login");
+
+    try {
+      await axios.post(
+        "/applications/apply",
+        { scholarshipId: data._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      navigate("/dashboard/student/applications");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="my-10 space-y-12">
 
@@ -47,6 +55,7 @@ const ScholarshipDetails = () => {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className="grid md:grid-cols-2 gap-10"
       >
         <img
@@ -70,12 +79,21 @@ const ScholarshipDetails = () => {
 
           {/* APPLY BUTTON */}
           <div className="pt-4">
-            <Link
-              to={`/payment/checkout?id=${data._id}`}
+            <button
+              onClick={() => {
+                if (!user) return navigate("/auth/login");
+
+                if (data.fees > 0) {
+                  return navigate(`/payment/checkout?id=${data._id}`);
+                }
+
+                // Free scholarship
+                handleFreeApply();
+              }}
               className="btn btn-primary"
             >
               Apply Now
-            </Link>
+            </button>
           </div>
         </div>
       </motion.div>
@@ -84,7 +102,7 @@ const ScholarshipDetails = () => {
       <section>
         <h2 className="text-3xl font-semibold mb-6">Reviews</h2>
 
-        {/* Static placeholder reviews */}
+        {/* Replace placeholder with backend reviews later */}
         <div className="space-y-4">
           <div className="border p-4 rounded-xl bg-white shadow">
             <p className="font-semibold">Sarah — ⭐⭐⭐⭐⭐</p>
@@ -119,7 +137,8 @@ const ScholarshipDetails = () => {
           {scholarshipsData
             .filter(
               (s) =>
-                s.category === data.category && String(s._id) !== String(data._id)
+                s.category === data.category &&
+                String(s._id) !== String(data._id)
             )
             .slice(0, 3)
             .map((r) => (
@@ -143,6 +162,7 @@ const ScholarshipDetails = () => {
             ))}
         </div>
       </section>
+
     </div>
   );
 };
