@@ -1,8 +1,8 @@
-// import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../hooks/useAuth";
+import useAuth from "../hooks/useAuth";
+import { useState, useEffect } from "react";
 
 const ScholarshipCard = ({ item }) => {
   const navigate = useNavigate();
@@ -11,27 +11,32 @@ const ScholarshipCard = ({ item }) => {
 
   const [bookmarked, setBookmarked] = useState(false);
 
-  // Optional: check if already bookmarked
+  // Check bookmark (optional)
   useEffect(() => {
-    const fetchBookmarks = async () => {
+    async function checkBookmark() {
       if (!user) return;
+
       try {
         const res = await axios.get("/bookmarks/my", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const already = res.data.find((b) => b.scholarshipId === item._id);
-        if (already) setBookmarked(true);
+
+        const isBookmarked = res.data.some(
+          (b) => b.scholarshipId === item._id
+        );
+
+        setBookmarked(isBookmarked);
       } catch (err) {
-        console.error(err);
+        console.error("Bookmark fetch error:", err);
       }
-    };
+    }
 
-    fetchBookmarks();
-  }, [user, item._id, token]);
+    checkBookmark();
+  }, [user, token, item._id]);
 
-  // Add bookmark handler
+  // Bookmark handler
   const handleBookmark = async () => {
-    if (!user) return navigate("/login");
+    if (!user) return navigate("/auth/login");
 
     try {
       const res = await axios.post(
@@ -41,9 +46,22 @@ const ScholarshipCard = ({ item }) => {
       );
 
       if (res.data.added) setBookmarked(true);
+      if (res.data.removed) setBookmarked(false);
     } catch (err) {
-      console.error(err);
+      console.error("Bookmark error:", err);
     }
+  };
+
+  // Apply Button handler
+  const handleApply = () => {
+    if (!user) return navigate("/auth/login");
+
+    if (item.fees > 0) {
+      return navigate(`/payment/checkout?id=${item._id}`);
+    }
+
+    // Free scholarship apply logic (optional)
+    navigate(`/scholarships/${item._id}`);
   };
 
   return (
@@ -67,21 +85,23 @@ const ScholarshipCard = ({ item }) => {
         <p className="text-sm">Country: {item.country}</p>
         <p className="font-semibold">Fees: ${item.fees}</p>
 
-        <div className="card-actions justify-end">
-          <Link
-            to={`/scholarships/${item._id}`}
-            className="btn btn-primary btn-sm"
-          >
+        <div className="card-actions justify-between">
+          {/* Details Button */}
+          <Link to={`/scholarships/${item._id}`} className="btn btn-primary btn-sm">
             Details
           </Link>
 
+          {/* Bookmark Button */}
           <button
             onClick={handleBookmark}
-            className={`btn btn-sm ${
-              bookmarked ? "btn-success" : "btn-ghost"
-            }`}
+            className={`btn btn-sm ${bookmarked ? "btn-success" : "btn-ghost"}`}
           >
             {bookmarked ? "Bookmarked" : "Bookmark"}
+          </button>
+
+          {/* Apply NOW button */}
+          <button onClick={handleApply} className="btn btn-accent btn-sm">
+            Apply
           </button>
         </div>
       </div>

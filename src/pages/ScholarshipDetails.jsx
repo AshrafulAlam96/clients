@@ -1,100 +1,110 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
 import useAuth from "../hooks/useAuth";
-import { scholarshipsData } from "../data/scholarshipsData";
-
-// Review API helpers
-import {
-  getReviews,
-  getAverageRating,
-  addOrUpdateReview,
-  deleteReview,
-} from "../api/reviews";
-
-import AddReviewModal from "../components/AddReviewModal";
+import { API_BASE_URL } from "../config/api";
 
 const ScholarshipDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth() || {};
 
-  const token = localStorage.getItem("token");
-
-  const [data, setData] = useState(null);
+  const [scholarship, setScholarship] = useState(null);
+  const [related, setRelated] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [avgRating, setAvgRating] = useState(0);
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load scholarship details (temporary from local JSON)
+  /** -------------------------------
+   *  LOAD SCHOLARSHIP + RELATED + REVIEWS
+   -------------------------------- **/
   useEffect(() => {
-    const found = scholarshipsData.find(
-      (item) => String(item._id) === String(id)
-    );
-    setData(found || null);
+    async function loadData() {
+      try {
+        setLoading(true);
+
+        // 1️⃣ Load scholarship
+        const res = await axios.get(`${API_BASE_URL}/scholarships/${id}`);
+        const data = res.data?.data || res.data || null;
+
+        if (!data) {
+          console.error("Invalid scholarship response:", res.data);
+          return;
+        }
+        setScholarship(data);
+
+        // 2️⃣ Load related scholarships
+        const relatedRes = await axios.get(`${API_BASE_URL}/scholarships`);
+        let all = relatedRes.data?.data || relatedRes.data || [];
+
+        if (!Array.isArray(all)) all = [];
+
+        const filtered = all.filter(
+          (item) =>
+            item.category === data.category && String(item._id) !== String(data._id)
+        );
+
+        setRelated(filtered.slice(0, 3));
+
+        // 3️⃣ Load reviews
+        const reviewsRes = await axios.get(`${API_BASE_URL}/reviews/${id}`);
+        let reviewList = reviewsRes.data?.data || reviewsRes.data || [];
+
+        if (!Array.isArray(reviewList)) reviewList = [];
+
+        setReviews(reviewList);
+      } catch (err) {
+        console.error("Error fetching details:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
   }, [id]);
 
-  // Fetch reviews
-  const fetchReviews = async () => {
-    const data = await getReviews(id);
-    setReviews(data);
+  /** -------------------------------
+   *  APPLY SYSTEM LOGIC
+   -------------------------------- **/
+  const handleApply = async () => {
+    if (!user) return navigate("/auth/login");
 
-    const avg = await getAverageRating(id);
-    setAvgRating(avg);
+    // Paid scholarship → go to checkout
+    if (scholarship.fees > 0) {
+      return navigate(`/payment/checkout?id=${scholarship._id}`);
+    }
+
+    // Free → apply directly
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.post(
+        `${API_BASE_URL}/applications/apply`,
+        { scholarshipId: scholarship._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert(res.data.message || "Application submitted!");
+    } catch (err) {
+      console.error(err);
+      alert("Application failed.");
+    }
   };
 
-  useEffect(() => {
-    fetchReviews();
-  }, [id]);
-
-  if (!data) {
+  /** -------------------------------
+   *  LOADING UI
+   -------------------------------- **/
+  if (loading || !scholarship) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div className="flex justify-center min-h-[50vh] items-center">
+        <span className="loading loading-lg"></span>
       </div>
     );
   }
 
-  // Free apply handler
-  const handleFreeApply = async () => {
-    if (!user) return navigate("/auth/login");
-
-    try {
-      await axios.post(
-        "/applications/apply",
-        { scholarshipId: data._id },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      navigate("/dashboard/student/applications");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Submit review
-  const handleSubmitReview = async ({ rating, comment }) => {
-    if (!user) return navigate("/auth/login");
-
-    await addOrUpdateReview(
-      {
-        scholarshipId: id,
-        rating,
-        comment,
-      },
-      token
-    );
-
-    setShowModal(false);
-    fetchReviews();
-  };
-
-  // Delete review
-  const handleDeleteReview = async (reviewId) => {
-    await deleteReview(reviewId, token);
-    fetchReviews();
-  };
-
+  /** -------------------------------
+   *  RENDER UI
+   -------------------------------- **/
   return (
     <div className="my-10 space-y-12">
 
@@ -102,141 +112,86 @@ const ScholarshipDetails = () => {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
         className="grid md:grid-cols-2 gap-10"
       >
         <img
-          src={data.image}
-          alt={data.name}
+          src={scholarship.image}
+          alt={scholarship.name}
           className="rounded-xl w-full h-72 object-cover shadow"
         />
 
         <div className="space-y-3">
-          <h1 className="text-4xl font-bold">{data.name}</h1>
-          <p className="text-lg">{data.university}</p>
+          <h1 className="text-4xl font-bold">{scholarship.name}</h1>
+          <p className="text-lg">{scholarship.university}</p>
 
-          <p><strong>Category:</strong> {data.category}</p>
-          <p><strong>Country:</strong> {data.country}</p>
-          <p><strong>Degree:</strong> {data.degree}</p>
-          <p><strong>Application Deadline:</strong> {data.deadline}</p>
-          <p><strong>Fees:</strong> ${data.fees}</p>
-          <p><strong>Monthly Stipend:</strong> ${data.stipend}</p>
+          <p><strong>Category:</strong> {scholarship.category}</p>
+          <p><strong>Country:</strong> {scholarship.country}</p>
+          <p><strong>Degree:</strong> {scholarship.degree}</p>
+          <p><strong>Deadline:</strong> {scholarship.deadline}</p>
+          <p><strong>Fees:</strong> ${scholarship.fees}</p>
+          <p><strong>Stipend:</strong> ${scholarship.stipend}</p>
 
-          <p className="text-gray-700">{data.description}</p>
+          <p className="text-gray-700">{scholarship.description}</p>
 
-          {/* APPLY BUTTON */}
-          <div className="pt-4">
-            <button
-              onClick={() => {
-                if (!user) return navigate("/auth/login");
-
-                if (data.fees > 0) {
-                  return navigate(`/payment/checkout?id=${data._id}`);
-                }
-
-                handleFreeApply();
-              }}
-              className="btn btn-primary"
-            >
-              Apply Now
-            </button>
-          </div>
+          <button className="btn btn-primary mt-4" onClick={handleApply}>
+            {scholarship.fees > 0 ? `Pay $${scholarship.fees} & Apply` : "Apply Free"}
+          </button>
         </div>
       </motion.div>
 
-      {/* REVIEW SECTION */}
+      {/* REVIEWS */}
       <section>
-        <h2 className="text-3xl font-semibold mb-2">
-          Reviews ({reviews.length}) — ⭐ {avgRating}
-        </h2>
+        <h2 className="text-3xl font-semibold mb-6">Reviews</h2>
 
-        {/* Reviews list */}
-        {reviews.length === 0 && (
-          <p className="text-gray-500">No reviews yet.</p>
+        {reviews.length === 0 ? (
+          <p className="text-gray-500">No reviews yet</p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((r) => (
+              <div key={r._id} className="border p-4 rounded-xl bg-white shadow">
+                <p className="font-semibold">
+                  {r.userName || "Anonymous"} — ⭐{" "}
+                  {r.rating || 5}
+                </p>
+                <p>{r.comment}</p>
+              </div>
+            ))}
+          </div>
         )}
 
-        <div className="space-y-4">
-          {reviews.map((rev) => (
-            <div key={rev._id} className="border p-4 rounded-xl bg-white shadow">
-              <p className="font-semibold">
-                {rev.email} — {"⭐".repeat(rev.rating)}
-              </p>
-
-              <p>{rev.comment}</p>
-
-              {/* Delete own review */}
-              {user?.email === rev.email && (
-                <button
-                  onClick={() => handleDeleteReview(rev._id)}
-                  className="btn btn-xs btn-error mt-2"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Add / update review */}
         <div className="mt-6">
           {user ? (
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowModal(true)}
-            >
-              Add / Update Review
-            </button>
+            <Link to={`/reviews/add/${id}`} className="btn btn-primary">
+              Add Review
+            </Link>
           ) : (
-            <p>
-              <Link to="/auth/login" className="text-blue-500">
-                Login to write a review
-              </Link>
-            </p>
+            <p><Link to="/auth/login" className="text-blue-500">Login to write review</Link></p>
           )}
         </div>
-
-        {showModal && (
-          <AddReviewModal
-            onSubmit={handleSubmitReview}
-            onClose={() => setShowModal(false)}
-          />
-        )}
       </section>
 
-      {/* RELATED SCHOLARSHIPS */}
+      {/* RELATED */}
       <section>
         <h2 className="text-2xl font-semibold mb-4">Related Scholarships</h2>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {scholarshipsData
-            .filter(
-              (s) =>
-                s.category === data.category &&
-                String(s._id) !== String(data._id)
-            )
-            .slice(0, 3)
-            .map((r) => (
-              <Link
-                key={r._id}
-                to={`/scholarships/${r._id}`}
-                className="card bg-white shadow-md hover:shadow-xl border border-base-200"
-              >
-                <figure>
-                  <img
-                    src={r.image}
-                    alt={r.name}
-                    className="h-40 w-full object-cover"
-                  />
-                </figure>
-                <div className="card-body">
-                  <h3 className="font-semibold text-lg">{r.name}</h3>
-                  <p className="text-sm">{r.university}</p>
-                </div>
-              </Link>
-            ))}
+          {related.map((r) => (
+            <Link
+              key={r._id}
+              to={`/scholarships/${r._id}`}
+              className="card bg-white shadow-md hover:shadow-xl border"
+            >
+              <figure>
+                <img src={r.image} className="h-40 w-full object-cover" />
+              </figure>
+              <div className="card-body">
+                <h3 className="font-semibold text-lg">{r.name}</h3>
+                <p className="text-sm">{r.university}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
-
     </div>
   );
 };
