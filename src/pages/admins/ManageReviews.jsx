@@ -1,26 +1,38 @@
-const dummyReviews = [
-  { id: 1, user: "John", rating: 5, comment: "Great scholarship!" },
-  { id: 2, user: "Sarah", rating: 4, comment: "Nice process" },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const ManageReviews = () => {
+  const [reviews, setReviews] = useState([]);
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/reviews/moderation/pending`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setReviews(res.data));
+  }, []);
+
+  const deleteReview = id => {
+    axios.delete(`${API_BASE_URL}/reviews/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(() => {
+      setReviews(reviews.filter(r => r._id !== id));
+    });
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Manage Reviews</h1>
+      <h1 className="text-2xl font-bold mb-4">Manage Reviews</h1>
 
-      <div className="space-y-4">
-        {dummyReviews.map((r) => (
-          <div key={r.id} className="bg-white p-4 rounded-xl shadow border">
-            <p className="font-semibold">{r.user} — ⭐ {r.rating}</p>
-            <p className="text-sm">{r.comment}</p>
-
-            <div className="flex gap-2 mt-3">
-              <button className="btn btn-sm btn-warning">Edit</button>
-              <button className="btn btn-sm btn-error">Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {reviews.map(r => (
+        <div key={r._id} className="border p-4 rounded mb-3">
+          <p>{r.comment}</p>
+          <button className="btn btn-error btn-sm"
+            onClick={() => deleteReview(r._id)}>
+            Delete
+          </button>
+        </div>
+      ))}
     </div>
   );
 };
