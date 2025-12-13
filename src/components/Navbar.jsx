@@ -1,88 +1,99 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../assets/logo_01.jpg";
 import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
-  const { user, logOut } = useAuth(); // ✅ add logOut from context
+  const { user, logOut } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logOut()
-      .then(() => console.log("User logged out"))
-      .catch((error) => console.error(error));
+  const handleLogout = async () => {
+    await logOut();
+    navigate("/auth/login");
+  };
+
+  // 🔁 Role-based dashboard route
+  const dashboardRoute = () => {
+    if (user?.role === "admin") return "/dashboard/admin";
+    if (user?.role === "moderator") return "/dashboard/mod";
+    return "/dashboard/student";
   };
 
   return (
     <div className="navbar bg-white px-4 shadow-md">
-      {/* Left: Logo */}
+
+      {/* LEFT — LOGO */}
       <div className="navbar-start">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-2xl font-bold tracking-wide"
-        >
-          <img
-            src={Logo}
-            alt="ScholarStream Logo"
-            className="w-10 h-10 rounded-md object-contain"
-          />
+        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
+          <img src={Logo} className="w-10 h-10 rounded-md" />
           <span className="text-warning">ScholarStream</span>
         </Link>
       </div>
 
-      {/* Center: Main Navigation */}
+      {/* CENTER — LINKS */}
       <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1 text-gray-700 font-medium">
+        <ul className="menu menu-horizontal px-1 font-medium">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/scholarships">All Scholarships</Link></li>
         </ul>
       </div>
 
-      {/* Right: Auth/Profile */}
-      <div className="navbar-end hidden lg:flex gap-2">
+      {/* RIGHT — AUTH */}
+      <div className="navbar-end">
+
+        {/* 🔐 LOGGED IN */}
         {user ? (
-          <>
-            <span className="text-gray-700 font-medium">
-              {user.displayName || user.email}
-            </span>
-            <button onClick={handleLogout} className="btn btn-outline btn-sm">
-              Logout
-            </button>
-            <Link to="/dashboard/student" className="btn btn-outline btn-sm">Dashboard
-</Link>
-          </>
+          <div className="dropdown dropdown-end">
+
+            {/* AVATAR BUTTON */}
+            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+              <div className="w-10 rounded-full">
+                <img
+                  src={user.photoURL || "https://i.ibb.co/2d0Y5zP/avatar.png"}
+                  alt="avatar"
+                />
+              </div>
+            </label>
+
+            {/* DROPDOWN */}
+            <ul
+              tabIndex={0}
+              className="menu dropdown-content mt-3 p-3 shadow bg-base-100 rounded-box w-52"
+            >
+              <li className="text-sm font-semibold text-gray-600 cursor-default">
+                {user.email}
+              </li>
+
+              <li className="text-xs text-gray-500 cursor-default">
+                Role: <span className="capitalize">{user.role}</span>
+              </li>
+
+              <div className="divider my-1"></div>
+
+              <li>
+                <Link to={dashboardRoute()}>
+                  Dashboard
+                </Link>
+              </li>
+
+              <li>
+                <button onClick={handleLogout} className="text-red-500">
+                  Logout
+                </button>
+              </li>
+            </ul>
+          </div>
         ) : (
           <>
-            <Link to="/auth/login" className="btn btn-outline btn-sm">Login</Link>
-            <Link to="/auth/register" className="btn btn-primary btn-sm">Register</Link>
+            {/* 🔓 NOT LOGGED IN */}
+            <Link to="/auth/login" className="btn btn-outline btn-sm">
+              Login
+            </Link>
+            <Link to="/auth/register" className="btn btn-primary btn-sm ml-2">
+              Register
+            </Link>
           </>
         )}
-      </div>
 
-      {/* Mobile Dropdown */}
-      <div className="dropdown lg:hidden">
-        <label tabIndex={0} className="btn btn-ghost">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-              d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </label>
-        <ul
-          tabIndex={0}
-          className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-52 text-gray-700"
-        >
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/scholarships">All Scholarships</Link></li>
-          {user ? (
-            <>
-              <li><button onClick={handleLogout}>Logout</button></li>
-            </>
-          ) : (
-            <>
-              <li><Link to="/auth/login">Login</Link></li>
-              <li><Link to="/auth/register">Register</Link></li>
-            </>
-          )}
-        </ul>
       </div>
     </div>
   );

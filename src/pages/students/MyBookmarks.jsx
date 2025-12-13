@@ -1,29 +1,49 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../../hooks/useAuth";
-import ScholarshipCard from "../../components/ScholarshipCard";
+import { API_BASE_URL } from "../../config/api";
 
 const MyBookmarks = () => {
-  const { user } = useAuth() || {};
+  const [bookmarks, setBookmarks] = useState([]);
   const token = localStorage.getItem("token");
-  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (!user) return;
-    axios.get("/bookmarks/my", { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setItems(r.data))
-      .catch(console.error);
-  }, [user]);
+    axios.get(`${API_BASE_URL}/bookmarks/my`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setBookmarks(res.data));
+  }, []);
+
+  if (bookmarks.length === 0) {
+    return <p>No bookmarks yet</p>;
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">My Bookmarks</h1>
+      <h1 className="text-2xl font-bold mb-4">My Bookmarks</h1>
+
       <div className="grid md:grid-cols-3 gap-6">
-        {items.length === 0 && <p>No bookmarks yet.</p>}
-        {items.map(b => (
-          // fetch scholarship preview: you can either embed scholarship snapshot in bookmark doc
-          // or call scholarship GET /scholarships/:id. Simple approach: call /scholarships/:id client-side
-          <BookmarkCard key={b._id} scholarshipId={b.scholarshipId} />
+        {bookmarks.map(b => (
+          <div key={b._id} className="card bg-white shadow border">
+            <figure>
+              <img src={b.scholarship.image} className="h-40 w-full object-cover" />
+            </figure>
+            <div className="card-body">
+              <h2>{b.scholarship.name}</h2>
+              <p>{b.scholarship.university}</p>
+              <button
+                className="btn btn-sm btn-error"
+                onClick={() =>
+                  axios.delete(
+                    `${API_BASE_URL}/bookmarks/${b.scholarship._id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  ).then(() =>
+                    setBookmarks(bookmarks.filter(x => x._id !== b._id))
+                  )
+                }
+              >
+                Remove
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </div>

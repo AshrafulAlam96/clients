@@ -1,61 +1,80 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from "@stripe/react-stripe-js";
 import axios from "axios";
-import { useAuth } from "../../hooks/useAuth";
+import useAuth from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+);
 
-const CheckoutFormInner = ({ scholarshipId, amount }) => {
+const CheckoutForm = ({ scholarshipId, amount }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const { user } = useAuth() || {};
-  const token = localStorage.getItem("token");
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
-    setLoading(true);
 
-    // Create payment intent on server
-    const createResp = await axios.post("/payments/create-payment-intent", {
-      amount,
-      scholarshipId
-    }, { headers: { Authorization: `Bearer ${token}` }});
+    try {
+      setLoading(true);
 
-    const clientSecret = createResp.data.clientSecret;
+      const { data } = await axios.post(
+        "http://localhost:5000/payments/create-payment-intent",
+        { amount, scholarshipId },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-    const card = elements.getElement(CardElement);
-    const confirm = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card, billing_details: { name: user?.displayName || user?.email } }
-    });
+      const result = await stripe.confirmCardPayment(
+        data.clientSecret,
+        {
+          payment_method: {
+            card: elements.getElement(CardElement),
+            billing_details: {
+              email: user?.email,
+              name: user?.displayName || "ScholarStream User"
+            }
+          }
+        }
+      );
 
-    if (confirm.error) {
-      alert(confirm.error.message);
+      if (result.error) {
+        alert(result.error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (result.paymentIntent.status === "succeeded") {
+        navigate("/payment/success");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed");
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    if (confirm.paymentIntent.status === "succeeded") {
-      // call backend confirm to create application record (or webhook can handle)
-      await axios.post("/payments/confirm", {
-        paymentIntentId: confirm.paymentIntent.id,
-        scholarshipId
-      }, { headers: { Authorization: `Bearer ${token}` }});
-
-      navigate("/payment/success");
-    } else {
-      navigate("/payment/failed");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <CardElement className="p-4 border rounded" />
-      <button className="btn btn-primary" disabled={!stripe || loading}>
+      <button
+        className="btn btn-primary w-full"
+        disabled={!stripe || loading}
+      >
         {loading ? "Processing..." : `Pay $${amount}`}
       </button>
     </form>
@@ -63,15 +82,21 @@ const CheckoutFormInner = ({ scholarshipId, amount }) => {
 };
 
 const Checkout = () => {
-  const search = new URLSearchParams(window.location.search);
-  const scholarshipId = search.get("id");
-  // you should fetch scholarship amount (fees) by id or pass via state
-  const amount = 50; // fetch real amount
+  const params = new URLSearchParams(window.location.search);
+  const scholarshipId = params.get("id");
+  const amount = 50; // TODO: fetch from backend
+
   return (
-    <div className="max-w-lg mx-auto mt-8">
-      <h1 className="text-2xl font-semibold mb-4">Checkout</h1>
+    <div className="max-w-lg mx-auto mt-10 bg-white p-6 rounded-xl shadow">
+      <h1 className="text-2xl font-semibold mb-4">
+        Scholarship Application Fee
+      </h1>
+
       <Elements stripe={stripePromise}>
-        <CheckoutFormInner scholarshipId={scholarshipId} amount={amount} />
+        <CheckoutForm
+          scholarshipId={scholarshipId}
+          amount={amount}
+        />
       </Elements>
     </div>
   );

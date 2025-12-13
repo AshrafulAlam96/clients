@@ -1,42 +1,50 @@
-import { scholarshipsData } from "../../data/scholarshipsData";
+import { useEffect, useState } from "react";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const ManageScholarships = () => {
+  const axiosSecure = useAxiosSecure();
+  const [scholarships, setScholarships] = useState([]);
+
+  useEffect(() => {
+    axiosSecure.get("/admin/scholarships").then(res => setScholarships(res.data));
+  }, []);
+
+  const handleDelete = (id) => {
+    axiosSecure.delete(`/admin/scholarships/${id}`)
+      .then(() => setScholarships(prev => prev.filter(s => s._id !== id)));
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Manage Scholarships</h1>
+      <h1 className="text-2xl font-bold mb-4">Manage Scholarships</h1>
 
-      <div className="overflow-x-auto">
-        <table className="table table-zebra">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Scholarship</th>
-              <th>University</th>
-              <th>Category</th>
-              <th>Country</th>
-              <th>Actions</th>
+      <table className="table bg-white">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>University</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {scholarships.map(s => (
+            <tr key={s._id}>
+              <td>{s.name}</td>
+              <td>{s.university}</td>
+              <td>
+                <button
+                  onClick={() => handleDelete(s._id)}
+                  className="btn btn-error btn-sm"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
-          </thead>
+          ))}
+        </tbody>
+      </table>
 
-          <tbody>
-            {scholarshipsData.map((item, index) => (
-              <tr key={item._id}>
-                <td>{index + 1}</td>
-                <td>{item.name}</td>
-                <td>{item.university}</td>
-                <td>{item.category}</td>
-                <td>{item.country}</td>
-
-                <td className="flex gap-2">
-                  <button className="btn btn-sm btn-warning">Edit</button>
-                  <button className="btn btn-sm btn-error">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-
-        </table>
-      </div>
     </div>
   );
 };

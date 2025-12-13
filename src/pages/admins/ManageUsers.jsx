@@ -1,44 +1,48 @@
-const dummyUsers = [
-  { id: 1, name: "John Doe", email: "john@mail.com", role: "student" },
-  { id: 2, name: "Sarah Lee", email: "sarah@mail.com", role: "moderator" },
-  { id: 3, name: "Admin", email: "admin@mail.com", role: "admin" },
-];
+import { useEffect, useState } from "react";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const ManageUsers = () => {
+  const axiosSecure = useAxiosSecure();
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    axiosSecure.get("/admin/users").then(res => setUsers(res.data));
+  }, []);
+
+  const updateRole = (id, role) => {
+    axiosSecure.patch(`/admin/users/role/${id}`, { role })
+      .then(() => alert("Role updated"));
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Manage Users</h1>
+      <h1 className="text-2xl font-bold mb-4">Manage Users</h1>
 
-      <div className="overflow-x-auto">
-        <table className="table table-zebra">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Change Role</th>
+      <table className="table bg-white">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {users.map(u => (
+            <tr key={u._id}>
+              <td>{u.email}</td>
+              <td>{u.role}</td>
+              <td>
+                <button onClick={() => updateRole(u._id, "admin")}
+                  className="btn btn-sm mr-2">Admin</button>
+                <button onClick={() => updateRole(u._id, "moderator")}
+                  className="btn btn-sm">Moderator</button>
+              </td>
             </tr>
-          </thead>
+          ))}
+        </tbody>
+      </table>
 
-          <tbody>
-            {dummyUsers.map((u, i) => (
-              <tr key={u.id}>
-                <td>{i + 1}</td>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td className="font-bold">{u.role}</td>
-
-                <td className="flex gap-2">
-                  <button className="btn btn-sm btn-primary">Make Admin</button>
-                  <button className="btn btn-sm btn-accent">Make Moderator</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-
-        </table>
-      </div>
     </div>
   );
 };

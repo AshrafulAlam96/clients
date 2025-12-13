@@ -1,35 +1,30 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "../../config/api";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
-const ManageReviews = () => {
+const ReviewModeration = () => {
+  const axiosSecure = useAxiosSecure();
   const [reviews, setReviews] = useState([]);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/reviews/moderation/pending`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setReviews(res.data));
+    axiosSecure.get("/admin/reviews/pending")
+      .then(res => setReviews(res.data));
   }, []);
 
-  const deleteReview = id => {
-    axios.delete(`${API_BASE_URL}/reviews/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(() => {
-      setReviews(reviews.filter(r => r._id !== id));
-    });
+  const approveReview = (id) => {
+    axiosSecure.patch(`/admin/reviews/approve/${id}`)
+      .then(() => setReviews(prev => prev.filter(r => r._id !== id)));
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Manage Reviews</h1>
+      <h1 className="text-2xl font-bold mb-4">Review Moderation</h1>
 
       {reviews.map(r => (
-        <div key={r._id} className="border p-4 rounded mb-3">
+        <div key={r._id} className="bg-white p-4 rounded shadow mb-3">
           <p>{r.comment}</p>
-          <button className="btn btn-error btn-sm"
-            onClick={() => deleteReview(r._id)}>
-            Delete
+          <button onClick={() => approveReview(r._id)}
+            className="btn btn-success btn-sm mt-2">
+            Approve
           </button>
         </div>
       ))}
@@ -37,4 +32,4 @@ const ManageReviews = () => {
   );
 };
 
-export default ManageReviews;
+export default ReviewModeration;
