@@ -1,103 +1,80 @@
 import { NavLink, Outlet } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  ClipboardList,
-  MessageSquare,
-  LogOut
-} from "lucide-react";
+import { FaHome, FaUsers, FaGraduationCap, FaChartBar, FaStar } from "react-icons/fa";
+import Logo from "../assets/logo_01.jpg";
 
 const AdminDashboardLayout = () => {
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-  };
-
-  const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg transition 
-     ${isActive ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-slate-800"}`;
-
   return (
     <div className="flex min-h-screen bg-gray-100">
-
-      {/* ================= SIDEBAR ================= */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col">
-
-        {/* LOGO */}
-        <div className="px-6 py-5 border-b border-slate-700">
-          <h1 className="text-2xl font-bold tracking-wide">
-            Admin Panel
-          </h1>
+      
+      {/* ========== SIDEBAR ========== */}
+      <aside className="w-64 bg-amber-100 shadow-lg flex flex-col">
+        
+        {/* Logo + Site Home */}
+        <div className="p-4 border-b bg-blue-950">
+          <NavLink to="/" className="flex items-center gap-2">
+            <img
+              src={Logo}
+              alt="ScholarStream"
+              className="w-10 h-10 rounded"
+            />
+            <span className="text-xl font-bold text-warning">
+              ScholarStream
+            </span>
+          </NavLink>
         </div>
 
-        {/* NAVIGATION */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        {/* Menu */}
+        <ul className="menu p-4 text-gray-700 flex-1">
+          
+          {/* Home (Public Site) */}
+          <li>
+            <NavLink to="/" className="flex items-center gap-2">
+              <FaHome /> Home
+            </NavLink>
+          </li>
 
-          <NavLink to="/dashboard/admin" end className={linkClass}>
-            <LayoutDashboard size={20} />
-            Dashboard
-          </NavLink>
+          <div className="divider my-2"></div>
 
-          <NavLink to="/dashboard/admin/users" className={linkClass}>
-            <Users size={20} />
-            Manage Users
-          </NavLink>
+          {/* Dashboard */}
+          <li>
+            <NavLink to="/dashboard/admin" end className="flex items-center gap-2">
+              <FaChartBar /> Dashboard
+            </NavLink>
+          </li>
 
-          <NavLink to="/dashboard/admin/scholarships" className={linkClass}>
-            <GraduationCap size={20} />
-            Manage Scholarships
-          </NavLink>
+          {/* Users */}
+          <li>
+            <NavLink to="/dashboard/admin/users" className="flex items-center gap-2">
+              <FaUsers /> Manage Users
+            </NavLink>
+          </li>
 
-          <NavLink to="/dashboard/admin/reviews" className={linkClass}>
-            <MessageSquare size={20} />
-            Review Moderation
-          </NavLink>
+          {/* Scholarships */}
+          <li>
+            <NavLink to="/dashboard/admin/scholarships" className="flex items-center gap-2">
+              <FaGraduationCap /> Manage Scholarships
+            </NavLink>
+          </li>
 
-        </nav>
+          {/* Reviews */}
+          <li>
+            <NavLink to="/dashboard/admin/reviews" className="flex items-center gap-2">
+              <FaStar /> Review Moderation
+            </NavLink>
+          </li>
+        </ul>
 
-        {/* LOGOUT */}
-        <div className="p-4 border-t border-slate-700">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg 
-                       bg-red-600 hover:bg-red-700 transition"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
+        {/* Footer */}
+        <div className="p-4 text-xs text-gray-400 border-t text-center">
+          Admin Panel © {new Date().getFullYear()}
         </div>
-
       </aside>
 
-      {/* ================= MAIN CONTENT ================= */}
-      <div className="flex-1 flex flex-col">
+      {/* ========== CONTENT ========== */}
+      <main className="flex-1 p-6">
+        <Outlet />
+      </main>
 
-        {/* TOP HEADER */}
-        <header className="bg-white shadow px-8 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-700">
-            Admin Dashboard
-          </h2>
-
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium">Admin</p>
-              <p className="text-xs text-gray-500">Administrator</p>
-            </div>
-            <img
-              src="https://i.ibb.co/ZYW3VTp/avatar.png"
-              alt="admin"
-              className="w-10 h-10 rounded-full border"
-            />
-          </div>
-        </header>
-
-        {/* PAGE CONTENT */}
-        <main className="flex-1 p-8 overflow-y-auto">
-          <Outlet />
-        </main>
-
-      </div>
     </div>
   );
 };
