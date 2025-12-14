@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import { toastSuccess, toastError } from "../../utils/toast";
 
 const Login = () => {
   const auth = useAuth();
@@ -23,17 +24,21 @@ const Login = () => {
     try {
       await signInUser(email, password);
       navigate(from, { replace: true });
+      toastSuccess("Login successful 🎉");
     } catch (err) {
       setError(err.message);
+      toastError(err.message);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       await googleLogin();
+      toastSuccess("Logged in with Google 🎉");
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message);
+      toastError(err.message);
     }
   };
 

@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { FaHome, FaUsers, FaGraduationCap, FaChartBar, FaStar } from "react-icons/fa";
 import Logo from "../assets/logo_01.jpg";
 
+
 const AdminDashboardLayout = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">

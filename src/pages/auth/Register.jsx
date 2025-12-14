@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // ✅ FIX HERE
 import useAuth from "../../hooks/useAuth";
+import { toastSuccess, toastError } from "../../utils/toast";
 
 const Register = () => {
   const { registerUser, googleLogin } = useAuth();
@@ -29,14 +30,19 @@ const Register = () => {
         form.name,
         form.photo
       );
+
+      toastSuccess("Registration successful 🎉");
       navigate("/");
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
         setError("This email is already registered. Please login.");
+        toastError("This email is already registered. Please login.");
       } else if (err.code === "auth/weak-password") {
         setError("Password must be at least 6 characters.");
+        toastError("Password must be at least 6 characters.");
       } else {
         setError("Registration failed. Try again.");
+        toastError("Registration failed. Try again.");
       }
     }
   };
@@ -57,12 +63,14 @@ const Register = () => {
           onChange={handleChange}
           required
         />
+
         <input
           name="photo"
           placeholder="Avatar URL"
           className="input input-bordered w-full"
           onChange={handleChange}
         />
+
         <input
           name="email"
           type="email"
@@ -71,6 +79,7 @@ const Register = () => {
           onChange={handleChange}
           required
         />
+
         <input
           name="password"
           type="password"
@@ -85,12 +94,28 @@ const Register = () => {
         </button>
       </form>
 
+      {/* Divider */}
+      <div className="divider">OR</div>
+
+      {/* Google Login */}
       <button
         onClick={googleLogin}
-        className="btn btn-outline w-full mt-3"
+        className="btn btn-outline w-full flex items-center justify-center gap-2"
       >
+        <img
+          src="https://www.svgrepo.com/show/475656/google-color.svg"
+          alt="Google"
+          className="w-5 h-5"
+        />
         Continue with Google
       </button>
+
+      <p className="text-sm mt-4 text-center">
+        Have any Account?{" "}
+        <Link to="/auth/login" className="text-blue-500 font-medium">
+          Go Login
+        </Link>
+      </p>
     </div>
   );
 };
