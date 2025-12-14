@@ -1,90 +1,58 @@
-import { Link, useNavigate } from "react-router-dom";
-import Logo from "../assets/logo_01.jpg";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
+import axios from "axios";
+import Logo from "../assets/logo_01.jpg";
 
 const Navbar = () => {
-  const { user, logOut } = useAuth();
-  const navigate = useNavigate();
+  const auth = useAuth();
+  const user = auth?.user;
+  const logOut = auth?.logOut;
 
-  const handleLogout = async () => {
-    await logOut();
-    navigate("/auth/login");
-  };
+  const [role, setRole] = useState("student");
 
-  // 🔁 Role-based dashboard route
-  const dashboardRoute = () => {
-    if (user?.role === "admin") return "/dashboard/admin";
-    if (user?.role === "moderator") return "/dashboard/mod";
-    return "/dashboard/student";
-  };
+  useEffect(() => {
+    if (user?.email) {
+      axios
+        .get(
+          `${import.meta.env.VITE_API_URL}/users/role/${user.email}`
+        )
+        .then((res) => setRole(res.data.role))
+        .catch(() => setRole("student"));
+    }
+  }, [user]);
+
+  const dashboardPath =
+    role === "admin"
+      ? "/dashboard/admin"
+      : role === "moderator"
+      ? "/dashboard/mod"
+      : "/dashboard/student";
 
   return (
-    <div className="navbar bg-white px-4 shadow-md">
-
-      {/* LEFT — LOGO */}
+    <div className="navbar bg-white shadow px-4">
+      {/* Logo */}
       <div className="navbar-start">
-        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
-          <img src={Logo} className="w-10 h-10 rounded-md" />
-          <span className="text-warning">ScholarStream</span>
+        <Link to="/" className="flex items-center gap-2">
+          <img src={Logo} className="w-10 h-10 rounded" />
+          <span className="text-xl font-bold text-warning">
+            ScholarStream
+          </span>
         </Link>
       </div>
 
-      {/* CENTER — LINKS */}
+      {/* Center */}
       <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1 font-medium">
+        <ul className="menu menu-horizontal gap-3">
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/scholarships">All Scholarships</Link></li>
+          <li><Link to="/scholarships">Scholarships</Link></li>
         </ul>
       </div>
 
-      {/* RIGHT — AUTH */}
+      {/* Right */}
       <div className="navbar-end">
-
-        {/* 🔐 LOGGED IN */}
-        {user ? (
-          <div className="dropdown dropdown-end">
-
-            {/* AVATAR BUTTON */}
-            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                <img
-                  src={user.photoURL || "https://i.ibb.co/2d0Y5zP/avatar.png"}
-                  alt="avatar"
-                />
-              </div>
-            </label>
-
-            {/* DROPDOWN */}
-            <ul
-              tabIndex={0}
-              className="menu dropdown-content mt-3 p-3 shadow bg-base-100 rounded-box w-52"
-            >
-              <li className="text-sm font-semibold text-gray-600 cursor-default">
-                {user.email}
-              </li>
-
-              <li className="text-xs text-gray-500 cursor-default">
-                Role: <span className="capitalize">{user.role}</span>
-              </li>
-
-              <div className="divider my-1"></div>
-
-              <li>
-                <Link to={dashboardRoute()}>
-                  Dashboard
-                </Link>
-              </li>
-
-              <li>
-                <button onClick={handleLogout} className="text-red-500">
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </div>
-        ) : (
+        {!user ? (
           <>
-            {/* 🔓 NOT LOGGED IN */}
             <Link to="/auth/login" className="btn btn-outline btn-sm">
               Login
             </Link>
@@ -92,8 +60,38 @@ const Navbar = () => {
               Register
             </Link>
           </>
-        )}
+        ) : (
+          <div className="dropdown dropdown-end">
+            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+              <div className="w-10 rounded-full">
+                <img
+                  src={
+                    user.photoURL ||
+                    "https://i.ibb.co/4pDNDk1/avatar.png"
+                  }
+                />
+              </div>
+            </label>
 
+            <ul
+              tabIndex={0}
+              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-white rounded-box w-52"
+            >
+              <li className="text-gray-600 text-sm px-2">
+                {user.email}
+              </li>
+              <li className="text-xs text-gray-400 px-2">
+                Role: {role}
+              </li>
+              <li>
+                <Link to={dashboardPath}>Dashboard</Link>
+              </li>
+              <li>
+                <button onClick={logOut}>Logout</button>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

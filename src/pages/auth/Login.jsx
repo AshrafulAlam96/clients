@@ -1,81 +1,97 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";   // ✅ import Link
+import { useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
-import SocialLogin from "./SocialLogin";
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const auth = useAuth();
+  const signInUser = auth?.signInUser;
+  const googleLogin = auth?.googleLogin;
+  const loading = auth?.loading;
 
-  const { signInUser } = useAuth(); // ✅ add googleLogin from your hook
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const onSubmit = (data) => {
-    console.log("Login Data:", data);
-    signInUser(data.email, data.password)
-      .then((result) => {
-        console.log(result.user);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  // 🔁 Redirect to previous page or home
+  const from = location.state?.from?.pathname || "/";
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      await signInUser(email, password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await googleLogin();
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center mt-20">Loading...</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-emerald-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-800">Login</h2>
+    <div className="max-w-md mx-auto mt-12 bg-white p-6 rounded-xl shadow">
+      <h2 className="text-2xl font-semibold mb-4 text-center">
+        Login to ScholarStream
+      </h2>
 
-        {/* Email/Password Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email */}
-          <label className="text-sm text-gray-700">Email</label>
-          <input
-            type="email"
-            placeholder="Email"
-            {...register("email", { required: "Email is required" })}
-            className="input input-bordered w-full bg-gray-100"
-          />
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+      <form onSubmit={handleLogin} className="space-y-4">
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          className="input input-bordered w-full"
+          required
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          className="input input-bordered w-full"
+          required
+        />
 
-          {/* Password */}
-          <label className="text-sm text-gray-700">Password</label>
-          <input
-            type="password"
-            placeholder="Password"
-            {...register("password", { required: "Password is required" })}
-            className="input input-bordered w-full bg-gray-100"
-          />
-          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="btn w-full bg-amber-700 text-white hover:bg-amber-800"
-          >
-            Login
-          </button>
-        </form>
+        <button className="btn btn-primary w-full">
+          Login
+        </button>
+      </form>
 
-        {/* Divider */}
-        <div className="divider">OR</div>
+      {/* Divider */}
+      <div className="divider">OR</div>
 
-        {/* Google Login */}
-        <SocialLogin></SocialLogin>
-        
+      {/* Google Login */}
+      <button
+        onClick={handleGoogleLogin}
+        className="btn btn-outline w-full flex items-center justify-center gap-2"
+      >
+        <img
+          src="https://www.svgrepo.com/show/475656/google-color.svg"
+          alt="Google"
+          className="w-5 h-5"
+        />
+        Continue with Google
+      </button>
 
-        {/* Register Link */}
-        <p className="mt-4 text-center text-sm text-gray-600">
-          New Here?{" "}
-          <Link to="/auth/register" className="text-amber-700 font-semibold hover:underline">
-            Register
-          </Link>
-        </p>
-      </div>
+      <p className="text-sm mt-4 text-center">
+        New here?{" "}
+        <Link to="/auth/register" className="text-blue-500">
+          Create an account
+        </Link>
+      </p>
     </div>
   );
 };

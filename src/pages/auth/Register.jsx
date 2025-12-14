@@ -1,77 +1,96 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
-import SocialLogin from "./SocialLogin";
 
 const Register = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  const { registerUser} = useAuth();
+  const { registerUser, googleLogin } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  const onSubmit = (data) => {
-    registerUser(data.email, data.password)
-      .then(result => console.log(result.user))
-      .catch(error => console.log(error));
+  const [form, setForm] = useState({
+    name: "",
+    photo: "",
+    email: "",
+    password: ""
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      await registerUser(
+        form.email,
+        form.password,
+        form.name,
+        form.photo
+      );
+      navigate("/");
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Please login.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password must be at least 6 characters.");
+      } else {
+        setError("Registration failed. Try again.");
+      }
+    }
   };
 
   return (
-    <div className="min-h-screen bg-emerald-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-xl md:text-2xl font-semibold text-center mb-6 text-gray-800">Register</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name */}
-          <label className="text-sm text-gray-700">Name</label>
-          <input
-            type="text"
-            placeholder="Name"
-            {...register("name", { required: "Name is required" })}
-            className="input input-bordered w-full bg-gray-100"
-          />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+    <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow">
+      <h2 className="text-2xl font-bold mb-4">Register</h2>
 
-          {/* Email */}
-          <label className="text-sm text-gray-700">Email</label>
-          <input
-            type="email"
-            placeholder="Email"
-            {...register("email", { required: "Email is required" })}
-            className="input input-bordered w-full bg-gray-100"
-          />
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+      {error && (
+        <p className="text-red-500 mb-3 text-sm">{error}</p>
+      )}
 
-          {/* Password */}
-          <label className="text-sm text-gray-700">Password</label>
-          <input
-            type="password"
-            placeholder="Password"
-            {...register("password", {
-              required: "Password is required",
-              minLength: { value: 6, message: "Minimum 6 characters" },
-            })}
-            className="input input-bordered w-full bg-gray-100"
-          />
-          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+      <form onSubmit={handleRegister} className="space-y-3">
+        <input
+          name="name"
+          placeholder="Name"
+          className="input input-bordered w-full"
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="photo"
+          placeholder="Avatar URL"
+          className="input input-bordered w-full"
+          onChange={handleChange}
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          className="input input-bordered w-full"
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          className="input input-bordered w-full"
+          onChange={handleChange}
+          required
+        />
 
-          {/* Submit */}
-          <button type="submit" className="btn w-full bg-amber-700 text-white hover:bg-amber-800">
-            Register
-          </button>
-        </form>
+        <button className="btn btn-primary w-full">
+          Register
+        </button>
+      </form>
 
-        {/* Divider */}
-        <div className="divider">OR</div>
-
-        {/* Google Signup */}
-        <SocialLogin></SocialLogin>
-
-        {/* Login Link */}
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link to="/auth/login" className="text-amber-700 font-semibold hover:underline">
-            Login
-          </Link>
-        </p>
-      </div>
+      <button
+        onClick={googleLogin}
+        className="btn btn-outline w-full mt-3"
+      >
+        Continue with Google
+      </button>
     </div>
   );
 };

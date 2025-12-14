@@ -2,93 +2,74 @@ import { createContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
   onAuthStateChanged,
-  updateProfile,
+  signOut,
+  updateProfile
 } from "firebase/auth";
 import axios from "axios";
-import auth from "../firebase/firebase.init";
+import { auth } from "../firebase/firebase.init";
 
 export const AuthContext = createContext(null);
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // REGISTER
-  // =========================
-  const registerUser = async (email, password, name) => {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
+  // ✅ REGISTER
+  const registerUser = async (email, password, name, photoURL) => {
+    try {
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-    await updateProfile(result.user, {
-      displayName: name,
-    });
+      await updateProfile(result.user, {
+        displayName: name,
+        photoURL
+      });
 
-    // Sync user to MongoDB
-    await axios.post(`${API_BASE_URL}/users`, {
-      name,
-      email,
+      // Sync to MongoDB ONLY if Firebase success
+      await axios.post(`${import.meta.env.VITE_API_URL}/users`, {
+        name,
+        email,
+        role: "student"
+      });
+
+      return result;
+    } catch (error) {
+      throw error; // pass error to UI
+    }
+  };
+
+  // ✅ LOGIN
+  const signInUser = (email, password) =>
+    signInWithEmailAndPassword(auth, email, password);
+
+  // ✅ GOOGLE LOGIN
+  const googleLogin = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    // MongoDB sync (safe: backend prevents duplicate)
+    await axios.post(`${import.meta.env.VITE_API_URL}/users`, {
+      name: result.user.displayName,
+      email: result.user.email,
+      role: "student"
     });
 
     return result;
   };
 
-  // =========================
-  // LOGIN
-  // =========================
-  const loginUser = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
-  };
+  const logOut = () => signOut(auth);
 
-  // =========================
-  // LOGOUT
-  // =========================
-  const logOut = async () => {
-    localStorage.removeItem("token");
-    setUser(null);
-    return signOut(auth);
-  };
-
-  // =========================
-  // AUTH STATE OBSERVER
-  // =========================
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser?.email) {
-        try {
-          // 🔐 Get JWT
-          const jwtRes = await axios.post(`${API_BASE_URL}/users/jwt`, {
-            email: currentUser.email,
-          });
-
-          localStorage.setItem("token", jwtRes.data.token);
-
-          // 🎭 Get Role
-          const roleRes = await axios.get(
-            `${API_BASE_URL}/users/role/${currentUser.email}`
-          );
-
-          setUser({
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            role: roleRes.data.role,
-          });
-        } catch (error) {
-          console.error("Auth sync failed:", error);
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-        localStorage.removeItem("token");
-      }
-
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -96,8 +77,9 @@ const AuthProvider = ({ children }) => {
     user,
     loading,
     registerUser,
-    loginUser,
-    logOut,
+    signInUser,
+    googleLogin,
+    logOut
   };
 
   return (
