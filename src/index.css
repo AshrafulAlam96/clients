@@ -9,3 +9,38 @@ body {
     font-optical-sizing: auto;
     font-style: normal;
 }
+
+/* small responsive tweaks */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+.swiper-pagination-bullet {
+    background: white !important;
+    opacity: 0.8;
+}
+
+.swiper-pagination-bullet-active {
+    background: #38bdf8 !important;
+    /* Tailwind sky-400 */
+}
+
+/* Flip card animation helpers */
+.perspective {
+    perspective: 1000px;
+}
+
+.transform-style-preserve-3d {
+    transform-style: preserve-3d;
+}
+
+.backface-hidden {
+    backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+    transform: rotateY(180deg);
+}
