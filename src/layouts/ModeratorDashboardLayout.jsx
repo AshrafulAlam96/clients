@@ -1,67 +1,64 @@
 import { NavLink, Outlet } from "react-router-dom";
-// import { motion } from "framer-motion";
+import { FaHome, FaClipboardCheck, FaGraduationCap } from "react-icons/fa";
 
 const ModeratorDashboardLayout = () => {
   return (
-    <div className="grid md:grid-cols-[260px_1fr] min-h-screen bg-base-200">
+    <div className="min-h-screen flex bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-lg">
+        <div className="p-5 text-xl font-bold text-center border-b">
+          Moderator Panel
+        </div>
 
-      {/* SIDEBAR */}
-      <aside className="bg-white border-r shadow-md p-5">
-        <h2 className="text-xl font-bold mb-8">Moderator Panel</h2>
-
-        <nav className="flex flex-col gap-3">
-
+        <nav className="menu p-4 text-gray-700">
+          <NavLink
+            to="/"
+            className="flex items-center gap-3 p-2 rounded hover:bg-gray-100"
+          >
+            🏠 Home
+          </NavLink>
+          <div className="divider my-2"></div>
           <NavLink
             to="/dashboard/mod"
             end
             className={({ isActive }) =>
-              `btn btn-sm justify-start ${isActive ? "btn-primary" : "btn-ghost"}`
+              `flex items-center gap-3 p-2 rounded ${
+                isActive ? "bg-warning text-white" : "hover:bg-gray-100"
+              }`
             }
           >
-            Dashboard Home
+            <FaHome /> Dashboard
           </NavLink>
 
           <NavLink
-            to="/dashboard/mod/scholarship-approval"
+            to="/dashboard/mod/reviews"
             className={({ isActive }) =>
-              `btn btn-sm justify-start ${isActive ? "btn-primary" : "btn-ghost"}`
+              `flex items-center gap-3 p-2 rounded ${
+                isActive ? "bg-warning text-white" : "hover:bg-gray-100"
+              }`
             }
           >
-            Approve Scholarships
+            <FaClipboardCheck /> Review Moderation
           </NavLink>
 
           <NavLink
-            to="/dashboard/mod/application-approval"
+            to="/dashboard/mod/scholarships"
             className={({ isActive }) =>
-              `btn btn-sm justify-start ${isActive ? "btn-primary" : "btn-ghost"}`
+              `flex items-center gap-3 p-2 rounded ${
+                isActive ? "bg-warning text-white" : "hover:bg-gray-100"
+              }`
             }
           >
-            Approve Applications
-          </NavLink>
-
-          <NavLink
-            to="/dashboard/mod/review-moderation"
-            className={({ isActive }) =>
-              `btn btn-sm justify-start ${isActive ? "btn-primary" : "btn-ghost"}`
-            }
-          >
-            Moderate Reviews
+            <FaGraduationCap /> Scholarship Review
           </NavLink>
 
         </nav>
       </aside>
 
-      {/* CONTENT */}
-      <main className="p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Outlet />
-        </motion.div>
+      {/* Content */}
+      <main className="flex-1 p-6">
+        <Outlet />
       </main>
-
     </div>
   );
 };

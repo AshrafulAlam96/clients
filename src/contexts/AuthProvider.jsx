@@ -13,53 +13,56 @@ import app from "../firebase/firebase.init";
 import axios from "axios";
 
 export const AuthContext = createContext(null);
-const auth = getAuth(app);
 
-const API = import.meta.env.VITE_API_URL;
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* REGISTER */
-  const registerUser = async (email, password, name, photoURL) => {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(result.user, { displayName: name, photoURL });
+  const API = import.meta.env.VITE_API_URL;
 
-    // Sync to MongoDB
+  /* ---------------- AUTH METHODS ---------------- */
+
+  const signInUser = (email, password) =>
+    signInWithEmailAndPassword(auth, email, password);
+
+  const registerUser = async (email, password, name, photo) => {
+    const res = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(res.user, {
+      displayName: name,
+      photoURL: photo
+    });
+
+    // save user to DB
     await axios.post(`${API}/users`, {
       name,
       email,
       role: "student"
     });
 
-    return result;
+    return res;
   };
 
-  /* LOGIN */
-  const signInUser = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password);
-
-  /* GOOGLE LOGIN */
   const googleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    const res = await signInWithPopup(auth, googleProvider);
 
-    // Sync user to DB (if not exists)
+    // sync with DB
     await axios.post(`${API}/users`, {
-      name: result.user.displayName,
-      email: result.user.email,
+      name: res.user.displayName,
+      email: res.user.email,
       role: "student"
     });
 
-    return result;
+    return res;
   };
 
-  /* LOGOUT */
   const logOut = () => signOut(auth);
 
-  /* 🔑 AUTH STATE OBSERVER */
+  /* ---------------- AUTH STATE OBSERVER ---------------- */
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -81,20 +84,20 @@ const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [API]);
 
-  const authInfo = {
+  const value = {
     user,
     role,
     loading,
-    registerUser,
     signInUser,
+    registerUser,
     googleLogin,
     logOut
   };
 
   return (
-    <AuthContext.Provider value={authInfo}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );

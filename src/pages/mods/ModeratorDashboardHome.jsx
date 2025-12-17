@@ -1,27 +1,34 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 const ModeratorDashboardHome = () => {
+  const [stats, setStats] = useState({});
+  const token = localStorage.getItem("token");
+  const API = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    axios
+      .get(`${API}/moderator/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => setStats(res.data));
+  }, [API, token]);
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">Moderator Dashboard</h1>
+    <div className="grid md:grid-cols-3 gap-6">
+      <div className="stat bg-white shadow rounded">
+        <div className="stat-title">Pending Scholarships</div>
+        <div className="stat-value text-warning">{stats.pendingScholarships}</div>
+      </div>
 
-      <p className="text-gray-600 mb-6">
-        Approve scholarships, applications, and monitor user reviews.
-      </p>
+      <div className="stat bg-white shadow rounded">
+        <div className="stat-title">Pending Applications</div>
+        <div className="stat-value text-info">{stats.pendingApplications}</div>
+      </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="p-6 bg-white rounded-xl shadow border">
-          <h2 className="font-semibold">Scholarships Pending</h2>
-          <p className="text-2xl font-bold mt-2">4</p>
-        </div>
-
-        <div className="p-6 bg-white rounded-xl shadow border">
-          <h2 className="font-semibold">Applications Pending</h2>
-          <p className="text-2xl font-bold mt-2">7</p>
-        </div>
-
-        <div className="p-6 bg-white rounded-xl shadow border">
-          <h2 className="font-semibold">Reviews to Moderate</h2>
-          <p className="text-2xl font-bold mt-2">3</p>
-        </div>
+      <div className="stat bg-white shadow rounded">
+        <div className="stat-title">Pending Reviews</div>
+        <div className="stat-value text-error">{stats.pendingReviews}</div>
       </div>
     </div>
   );

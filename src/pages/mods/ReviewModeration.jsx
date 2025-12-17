@@ -1,50 +1,89 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../config/api";
+import { toastSuccess, toastError } from "../../utils/toast";
 
-const ReviewModeration = () => {
+const ManageReviews = () => {
   const [reviews, setReviews] = useState([]);
+  const API = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
+  /* =========================
+     FETCH PENDING REVIEWS
+  ========================= */
+  const fetchReviews = async () => {
+    try {
+      const res = await axios.get(
+        `${API}/reviews/moderation/pending`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      setReviews(res.data);
+    } catch (err) {
+      toastError("Failed to load reviews");
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/reviews/moderation/pending`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setReviews(res.data));
+    fetchReviews();
   }, []);
 
-  const updateStatus = (id, status) => {
-    axios.patch(`${API_BASE_URL}/reviews/${id}/status`,
-      { status },
-      { headers: { Authorization: `Bearer ${token}` } }
-    ).then(() => {
-      setReviews(reviews.filter(r => r._id !== id));
-    });
+  /* =========================
+     APPROVE / REJECT
+  ========================= */
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.patch(
+        `${API}/reviews/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toastSuccess(`Review ${status}`);
+      fetchReviews();
+    } catch (err) {
+      toastError("Action failed");
+      console.error(err);
+    }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Review Moderation</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Review Moderation</h1>
 
-      {reviews.map(r => (
-        <div key={r._id} className="bg-white p-4 shadow rounded mb-3">
-          <p><strong>{r.userName}</strong> ⭐ {r.rating}</p>
-          <p>{r.comment}</p>
+      {reviews.length === 0 && (
+        <p className="text-gray-500">No pending reviews 🎉</p>
+      )}
 
-          <div className="mt-2 space-x-2">
-            <button className="btn btn-success btn-sm"
-              onClick={() => updateStatus(r._id, "approved")}>
-              Approve
-            </button>
+      <div className="space-y-4">
+        {reviews.map(r => (
+          <div key={r._id} className="bg-white p-5 shadow rounded-xl">
+            <p className="font-semibold">{r.userEmail}</p>
+            <p className="text-sm text-gray-600 mt-1">
+              {r.comment}
+            </p>
 
-            <button className="btn btn-error btn-sm"
-              onClick={() => updateStatus(r._id, "rejected")}>
-              Reject
-            </button>
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => updateStatus(r._id, "approved")}
+                className="btn btn-success btn-sm"
+              >
+                Approve
+              </button>
+
+              <button
+                onClick={() => updateStatus(r._id, "rejected")}
+                className="btn btn-error btn-sm"
+              >
+                Reject
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
 
-export default ReviewModeration;
+export default ManageReviews;

@@ -1,25 +1,26 @@
-// Dummy admin-submitted scholarships
-const pendingScholarships = [
-  { id: 1, name: "Harvard Excellence", university: "Harvard", category: "Merit-Based" },
-  { id: 2, name: "NUS ASEAN Award", university: "NUS", category: "Government" },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-const ScholarshipApproval = () => {
+const ScholarshipReview = () => {
+  const [scholarships, setScholarships] = useState([]);
+  const API = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    axios.get(`${API}/scholarships`)
+      .then(res => setScholarships(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Scholarship Approval</h1>
+      <h1 className="text-2xl font-bold mb-5">Scholarship Review</h1>
 
-      <div className="space-y-4">
-        {pendingScholarships.map((s) => (
-          <div key={s.id} className="bg-white p-5 rounded-xl shadow border">
-            <h2 className="font-bold text-lg">{s.name}</h2>
-            <p>{s.university}</p>
-            <p className="text-sm text-gray-500">{s.category}</p>
-
-            <div className="flex gap-2 mt-4">
-              <button className="btn btn-success btn-sm">Approve</button>
-              <button className="btn btn-error btn-sm">Reject</button>
-            </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        {scholarships.map(s => (
+          <div key={s._id} className="bg-white p-4 shadow rounded">
+            <h3 className="font-semibold">{s.name}</h3>
+            <p className="text-sm">{s.university}</p>
+            <p className="text-sm text-gray-500">{s.country}</p>
           </div>
         ))}
       </div>
@@ -27,4 +28,4 @@ const ScholarshipApproval = () => {
   );
 };
 
-export default ScholarshipApproval;
+export default ScholarshipReview;
